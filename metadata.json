@@ -1,0 +1,5 @@
+{
+  "name": "AI Resume Content Generator",
+  "description": "An expert-level resume content generator that transforms raw candidate details into a professional, achievement-focused resume in a structured JSON format using AI.",
+  "requestFramePermissions": []
+}
