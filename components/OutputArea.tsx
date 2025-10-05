@@ -29,6 +29,7 @@ interface OutputAreaProps {
 type ActiveTab = 'preview' | 'json';
 
 interface ExportOptions {
+    format: 'pdf' | 'png' | 'jpg';
     paperSize: 'a4' | 'letter' | 'legal';
     orientation: 'portrait' | 'landscape';
     theme: 'light' | 'dark';
@@ -44,6 +45,7 @@ const OutputArea: React.FC<OutputAreaProps> = ({ jsonContent, resumeData, isLoad
   const [isExporting, setIsExporting] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
+    format: 'pdf',
     paperSize: 'a4',
     orientation: 'portrait',
     theme: 'light',
@@ -66,11 +68,11 @@ const OutputArea: React.FC<OutputAreaProps> = ({ jsonContent, resumeData, isLoad
     }
   }, [jsonContent, resumeData]);
 
-  // Effect to run the PDF export process after the hidden component has rendered
+  // Effect to run the export process after the hidden component has rendered
   useEffect(() => {
     if (!isExporting || !exportRenderRef.current || !resumeData) return;
 
-    const performPdfExport = async () => {
+    const performExport = async () => {
         const input = exportRenderRef.current?.firstChild as HTMLElement;
         if (!input) {
             console.error("Could not find the element to export.");
@@ -87,53 +89,61 @@ const OutputArea: React.FC<OutputAreaProps> = ({ jsonContent, resumeData, isLoad
                 logging: false,
             });
 
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jspdf.jsPDF({
-                orientation: exportOptions.orientation,
-                unit: 'mm',
-                format: exportOptions.paperSize,
-            });
+            if (exportOptions.format === 'pdf') {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jspdf.jsPDF({
+                    orientation: exportOptions.orientation,
+                    unit: 'mm',
+                    format: exportOptions.paperSize,
+                });
 
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            
-            const imgWidth = canvas.width;
-            const imgHeight = canvas.height;
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
 
-            const pdfRatio = pdfWidth / pdfHeight;
-            const imgRatio = imgWidth / imgHeight;
+                const pdfRatio = pdfWidth / pdfHeight;
+                const imgRatio = imgWidth / imgHeight;
 
-            let finalImgWidth, finalImgHeight;
+                let finalImgWidth, finalImgHeight;
 
-            // Calculate the final dimensions to fit the page while maintaining aspect ratio
-            if (imgRatio > pdfRatio) {
-                // Image is wider relative to the page, so width is the limiting factor
-                finalImgWidth = pdfWidth;
-                finalImgHeight = pdfWidth / imgRatio;
+                if (imgRatio > pdfRatio) {
+                    finalImgWidth = pdfWidth;
+                    finalImgHeight = pdfWidth / imgRatio;
+                } else {
+                    finalImgHeight = pdfHeight;
+                    finalImgWidth = pdfHeight * imgRatio;
+                }
+
+                const xOffset = (pdfWidth - finalImgWidth) / 2;
+                const yOffset = (pdfHeight - finalImgHeight) / 2;
+                
+                pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalImgWidth, finalImgHeight);
+                pdf.save('resume.pdf');
             } else {
-                // Image is taller or equal relative to the page, so height is the limiting factor
-                finalImgHeight = pdfHeight;
-                finalImgWidth = pdfHeight * imgRatio;
+                // Handle PNG/JPG export
+                const mimeType = `image/${exportOptions.format === 'jpg' ? 'jpeg' : 'png'}`;
+                const quality = exportOptions.format === 'jpg' ? 0.95 : undefined;
+                const imgData = canvas.toDataURL(mimeType, quality);
+
+                const a = document.createElement('a');
+                a.href = imgData;
+                a.download = `resume.${exportOptions.format}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
             }
 
-            // Calculate offsets to center the image on the page
-            const xOffset = (pdfWidth - finalImgWidth) / 2;
-            const yOffset = (pdfHeight - finalImgHeight) / 2;
-            
-            // Add the perfectly scaled and centered image to the PDF
-            pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalImgWidth, finalImgHeight);
-            
-            pdf.save('resume.pdf');
-
         } catch (e) {
-            console.error("Error exporting to PDF:", e);
+            console.error("Error exporting:", e);
         } finally {
             setIsExporting(false); // Reset export state
         }
     };
 
     // A short timeout allows the DOM to update with the hidden div before we capture it.
-    setTimeout(performPdfExport, 100);
+    setTimeout(performExport, 100);
 
   }, [isExporting, resumeData, exportOptions, primaryColor]);
 
@@ -209,7 +219,7 @@ const OutputArea: React.FC<OutputAreaProps> = ({ jsonContent, resumeData, isLoad
                         onClick={() => setIsExportModalOpen(true)}
                         disabled={isExporting}
                         className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        title="Export as PDF"
+                        title="Export File"
                     >
                         {isExporting ? (
                             <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -319,30 +329,44 @@ const OutputArea: React.FC<OutputAreaProps> = ({ jsonContent, resumeData, isLoad
                   </div>
 
                   <div className="space-y-6">
-                      {/* Paper Size */}
-                      <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Paper Size</label>
-                          <select value={exportOptions.paperSize} onChange={e => setExportOptions(prev => ({...prev, paperSize: e.target.value as ExportOptions['paperSize']}))} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-primary-500 focus:border-primary-500">
-                              <option value="a4">A4</option>
-                              <option value="letter">Letter</option>
-                              <option value="legal">Legal</option>
+                      {/* Format */}
+                       <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Format</label>
+                          <select value={exportOptions.format} onChange={e => setExportOptions(prev => ({...prev, format: e.target.value as ExportOptions['format']}))} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-primary-500 focus:border-primary-500">
+                              <option value="pdf">PDF</option>
+                              <option value="png">PNG</option>
+                              <option value="jpg">JPG</option>
                           </select>
                       </div>
 
-                      {/* Orientation */}
-                      <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Orientation</label>
-                          <div className="flex space-x-4">
-                              <label className="flex items-center">
-                                  <input type="radio" name="orientation" value="portrait" checked={exportOptions.orientation === 'portrait'} onChange={e => setExportOptions(prev => ({...prev, orientation: e.target.value as ExportOptions['orientation']}))} className="form-radio text-primary-600 focus:ring-primary-500" />
-                                  <span className="ml-2">Portrait</span>
-                              </label>
-                              <label className="flex items-center">
-                                  <input type="radio" name="orientation" value="landscape" checked={exportOptions.orientation === 'landscape'} onChange={e => setExportOptions(prev => ({...prev, orientation: e.target.value as ExportOptions['orientation']}))} className="form-radio text-primary-600 focus:ring-primary-500" />
-                                  <span className="ml-2">Landscape</span>
-                              </label>
+                      {exportOptions.format === 'pdf' && (
+                        <>
+                          {/* Paper Size */}
+                          <div>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Paper Size</label>
+                              <select value={exportOptions.paperSize} onChange={e => setExportOptions(prev => ({...prev, paperSize: e.target.value as ExportOptions['paperSize']}))} className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 focus:ring-primary-500 focus:border-primary-500">
+                                  <option value="a4">A4</option>
+                                  <option value="letter">Letter</option>
+                                  <option value="legal">Legal</option>
+                              </select>
                           </div>
-                      </div>
+
+                          {/* Orientation */}
+                          <div>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Orientation</label>
+                              <div className="flex space-x-4">
+                                  <label className="flex items-center">
+                                      <input type="radio" name="orientation" value="portrait" checked={exportOptions.orientation === 'portrait'} onChange={e => setExportOptions(prev => ({...prev, orientation: e.target.value as ExportOptions['orientation']}))} className="form-radio text-primary-600 focus:ring-primary-500" />
+                                      <span className="ml-2">Portrait</span>
+                                  </label>
+                                  <label className="flex items-center">
+                                      <input type="radio" name="orientation" value="landscape" checked={exportOptions.orientation === 'landscape'} onChange={e => setExportOptions(prev => ({...prev, orientation: e.target.value as ExportOptions['orientation']}))} className="form-radio text-primary-600 focus:ring-primary-500" />
+                                      <span className="ml-2">Landscape</span>
+                                  </label>
+                              </div>
+                          </div>
+                        </>
+                      )}
 
                       {/* Theme */}
                       <div>

@@ -67,60 +67,64 @@ const CvPreview = forwardRef<HTMLDivElement, CvPreviewProps>(({ data, theme, pri
 
       {/* Summary */}
       {showSection('summary') && (
-        <section className="mb-8">
-            <h3 className="text-2xl font-bold border-b border-gray-200 dark:border-slate-700 pb-2 mb-3" style={{ color: primaryColor }}>Professional Summary</h3>
+        <section className="mb-6">
+            <h3 className="text-xl font-bold border-b border-gray-200 dark:border-slate-700 pb-2 mb-3" style={{ color: primaryColor }}>Professional Summary</h3>
             <p className="leading-relaxed">{summary}</p>
         </section>
       )}
 
       {/* Experience */}
       {showSection('experience') && (
-        <section className="mb-8">
-            <h3 className="text-2xl font-bold border-b border-gray-200 dark:border-slate-700 pb-2 mb-4 flex items-center gap-3" style={{ color: primaryColor }}>
-            <BriefcaseIcon className="w-6 h-6 flex-shrink-0" />
+        <section className="mb-6">
+            <h3 className="text-xl font-bold border-b border-gray-200 dark:border-slate-700 pb-2 mb-4 flex items-center gap-3" style={{ color: primaryColor }}>
+            <BriefcaseIcon className="w-5 h-5 flex-shrink-0" />
             Work Experience
             </h3>
-            {experience.map((job, index) => (
-            <div key={index} className="mb-6 last:mb-0">
-                <div className="flex justify-between items-baseline">
-                <h4 className="text-lg font-bold text-gray-800 dark:text-slate-100">{job.title}</h4>
-                <p className="text-sm font-medium text-gray-500 dark:text-slate-400">{job.dates}</p>
-                </div>
-                <p className="text-md font-semibold" style={{ color: primaryColor }}>{job.company}</p>
-                <ul className="mt-2 list-disc list-inside text-gray-600 dark:text-slate-300 space-y-1">
-                {job.achievements.map((ach, i) => (
-                    <li key={i}>{ach}</li>
-                ))}
-                </ul>
+            <div className="space-y-4">
+              {experience.map((job, index) => (
+              <div key={index} className="pl-4 border-l-2" style={{borderColor: hexToRgba(primaryColor, 0.4)}}>
+                  <div className="flex justify-between items-baseline">
+                  <h4 className="text-lg font-bold text-gray-800 dark:text-slate-100">{job.title}</h4>
+                  <p className="text-sm font-medium text-gray-500 dark:text-slate-400">{job.dates}</p>
+                  </div>
+                  <p className="text-md font-semibold" style={{ color: primaryColor }}>{job.company}</p>
+                  <ul className="mt-2 list-disc list-inside text-gray-600 dark:text-slate-300 space-y-1">
+                  {job.achievements.map((ach, i) => (
+                      <li key={i}>{ach}</li>
+                  ))}
+                  </ul>
+              </div>
+              ))}
             </div>
-            ))}
         </section>
       )}
       
       {/* Education */}
       {showSection('education') && (
-        <section className="mb-8">
-            <h3 className="text-2xl font-bold border-b border-gray-200 dark:border-slate-700 pb-2 mb-4 flex items-center gap-3" style={{ color: primaryColor }}>
+        <section className="mb-6">
+            <h3 className="text-xl font-bold border-b border-gray-200 dark:border-slate-700 pb-2 mb-4 flex items-center gap-3" style={{ color: primaryColor }}>
             <AcademicCapIcon className="w-6 h-6 flex-shrink-0" />
             Education
             </h3>
+            <div className="space-y-4">
             {education.map((edu, index) => (
-            <div key={index} className="mb-4 last:mb-0">
-                <div className="flex justify-between items-baseline">
-                    <h4 className="text-lg font-bold text-gray-800 dark:text-slate-100">{edu.institution}</h4>
-                    <p className="text-sm font-medium text-gray-500 dark:text-slate-400">{edu.dates}</p>
-                </div>
-                <p className="text-md italic text-gray-600 dark:text-slate-400">{edu.degree}</p>
-                {edu.details && <p className="text-sm text-gray-500 dark:text-slate-500 mt-1">{edu.details}</p>}
-            </div>
+              <div key={index} className="pl-4 border-l-2" style={{borderColor: hexToRgba(primaryColor, 0.4)}}>
+                  <div className="flex justify-between items-baseline">
+                      <h4 className="text-lg font-bold text-gray-800 dark:text-slate-100">{edu.institution}</h4>
+                      <p className="text-sm font-medium text-gray-500 dark:text-slate-400">{edu.dates}</p>
+                  </div>
+                  <p className="text-md italic text-gray-600 dark:text-slate-400">{edu.degree}</p>
+                  {edu.details && <p className="text-sm text-gray-500 dark:text-slate-500 mt-1">{edu.details}</p>}
+              </div>
             ))}
+            </div>
         </section>
       )}
 
       {/* Skills */}
       {showSection('skills') && (
         <section>
-            <h3 className="text-2xl font-bold border-b border-gray-200 dark:border-slate-700 pb-2 mb-4" style={{ color: primaryColor }}>Skills</h3>
+            <h3 className="text-xl font-bold border-b border-gray-200 dark:border-slate-700 pb-2 mb-4" style={{ color: primaryColor }}>Skills</h3>
             <div className="space-y-4">
                 {Object.entries(skills).map(([category, skillList]) => {
                     if (!Array.isArray(skillList) || skillList.length === 0) {
@@ -128,7 +132,7 @@ const CvPreview = forwardRef<HTMLDivElement, CvPreviewProps>(({ data, theme, pri
                     }
                     return (
                         <div key={category}>
-                            <h4 className="font-bold text-md text-gray-700 dark:text-slate-300 mb-2">{category}</h4>
+                            <h4 className="font-semibold tracking-wider uppercase text-xs text-gray-600 dark:text-slate-400 mb-2">{category}</h4>
                             <div className="flex flex-wrap gap-2">
                                 {skillList.map((skill, i) => (
                                     <span key={i} className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={skillTagStyle}>
