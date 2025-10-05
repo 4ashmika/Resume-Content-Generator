@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface InputAreaProps {
@@ -6,9 +5,11 @@ interface InputAreaProps {
   setRawText: (text: string) => void;
   onGenerate: () => void;
   isLoading: boolean;
+  hasApiKey: boolean;
+  onApiKeyClick: () => void;
 }
 
-const InputArea: React.FC<InputAreaProps> = ({ rawText, setRawText, onGenerate, isLoading }) => {
+const InputArea: React.FC<InputAreaProps> = ({ rawText, setRawText, onGenerate, isLoading, hasApiKey, onApiKeyClick }) => {
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg h-full flex flex-col">
       <h2 className="text-2xl font-semibold mb-4 text-primary-700 dark:text-primary-300">Your Raw Details</h2>
@@ -22,9 +23,21 @@ const InputArea: React.FC<InputAreaProps> = ({ rawText, setRawText, onGenerate, 
         className="flex-grow w-full p-4 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition duration-200 resize-none"
         rows={20}
       />
+      
+      {!hasApiKey && (
+        <div className="mt-4 text-center p-3 bg-amber-100 dark:bg-amber-900/30 rounded-md border border-amber-400/50">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            Please set your Google Gemini API key to enable generation.
+          </p>
+          <button onClick={onApiKeyClick} className="mt-1 text-sm font-bold text-primary-600 dark:text-primary-400 hover:underline">
+            Set API Key
+          </button>
+        </div>
+      )}
+
       <button
         onClick={onGenerate}
-        disabled={isLoading}
+        disabled={isLoading || !hasApiKey}
         className="mt-6 w-full bg-primary-600 text-white font-bold py-3 px-4 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center"
       >
         {isLoading ? (

@@ -1,12 +1,5 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { PROMPT_INSTRUCTIONS } from '../constants';
-
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const resumeSchema = {
   type: Type.OBJECT,
@@ -71,8 +64,12 @@ const resumeSchema = {
   required: ["personalInfo", "summary", "experience", "education", "skills"],
 };
 
+export const generateResumeJson = async (rawText: string, apiKey: string): Promise<string> => {
+  if (!apiKey) {
+    throw new Error("Google Gemini API key not provided.");
+  }
+  const ai = new GoogleGenAI({ apiKey });
 
-export const generateResumeJson = async (rawText: string): Promise<string> => {
   const prompt = PROMPT_INSTRUCTIONS.replace('{CANDIDATE_DETAILS}', rawText);
 
   try {
@@ -88,11 +85,14 @@ export const generateResumeJson = async (rawText: string): Promise<string> => {
 
     const jsonText = response.text.trim();
     if (!jsonText) {
-        throw new Error("Received an empty response from the API.");
+        throw new Error("Received an empty response from the API. This could be due to a content filter or an issue with the prompt.");
     }
     return jsonText;
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-    throw new Error("Failed to generate content from Gemini API.");
+    if (error instanceof Error && error.message.includes('API key not valid')) {
+        throw new Error("The provided API key is not valid. Please check your key and try again.");
+    }
+    throw new Error("Failed to generate content from Gemini API. Check the console for more details.");
   }
 };
