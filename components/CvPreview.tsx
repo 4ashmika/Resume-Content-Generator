@@ -135,7 +135,7 @@ const CvPreview = forwardRef<HTMLDivElement, CvPreviewProps>(({ data, theme, pri
                             <h4 className="font-semibold tracking-wider uppercase text-xs text-gray-600 dark:text-slate-400 mb-2">{category}</h4>
                             <div className="flex flex-wrap gap-2">
                                 {skillList.map((skill, i) => (
-                                    <span key={i} className="text-xs font-semibold px-2.5 py-0.5 rounded-full" style={skillTagStyle}>
+                                    <span key={i} className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full" style={skillTagStyle}>
                                         {skill}
                                     </span>
                                 ))}
