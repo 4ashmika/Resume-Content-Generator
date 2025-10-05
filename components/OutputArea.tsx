@@ -82,7 +82,7 @@ const OutputArea: React.FC<OutputAreaProps> = ({ jsonContent, resumeData, isLoad
             // Ensure we capture from the top of the element
             window.scrollTo(0, 0);
             const canvas = await html2canvas(input, {
-                scale: 2, // Higher scale for better resolution
+                scale: 3, // Higher scale for better resolution and crisper fonts
                 useCORS: true,
                 logging: false,
             });
@@ -96,26 +96,33 @@ const OutputArea: React.FC<OutputAreaProps> = ({ jsonContent, resumeData, isLoad
 
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-            const canvasAspectRatio = canvasWidth / canvasHeight;
-            const pdfAspectRatio = pdfWidth / pdfHeight;
-
-            let imgWidth = pdfWidth;
-            let imgHeight = pdfWidth / canvasAspectRatio;
-
-            // If the calculated image height is greater than the PDF page height,
-            // we need to scale based on height instead to fit it on the page.
-            if (imgHeight > pdfHeight) {
-                imgHeight = pdfHeight;
-                imgWidth = pdfHeight * canvasAspectRatio;
-            }
             
-            // Center the image on the page (optional, but looks better)
-            const x = (pdfWidth - imgWidth) / 2;
-            const y = 0; // Align to top
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
 
-            pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+            const pdfRatio = pdfWidth / pdfHeight;
+            const imgRatio = imgWidth / imgHeight;
+
+            let finalImgWidth, finalImgHeight;
+
+            // Calculate the final dimensions to fit the page while maintaining aspect ratio
+            if (imgRatio > pdfRatio) {
+                // Image is wider relative to the page, so width is the limiting factor
+                finalImgWidth = pdfWidth;
+                finalImgHeight = pdfWidth / imgRatio;
+            } else {
+                // Image is taller or equal relative to the page, so height is the limiting factor
+                finalImgHeight = pdfHeight;
+                finalImgWidth = pdfHeight * imgRatio;
+            }
+
+            // Calculate offsets to center the image on the page
+            const xOffset = (pdfWidth - finalImgWidth) / 2;
+            const yOffset = (pdfHeight - finalImgHeight) / 2;
+            
+            // Add the perfectly scaled and centered image to the PDF
+            pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalImgWidth, finalImgHeight);
+            
             pdf.save('resume.pdf');
 
         } catch (e) {
